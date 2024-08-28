@@ -1,0 +1,17 @@
+cd server
+py -m venv .venv
+source .venv/Scripts/activate
+pip install fastapi uvicorn python-socketio
+
+https://python-socketio.readthedocs.io/en/stable/client.html
+pip install "python-socketio[asyncio_client]"
+
+pip install websockets
+
+cd ..
+npx create-react-app client
+cd client
+
+npm install socket.io-client
+
+npm start
