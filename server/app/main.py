@@ -2,6 +2,7 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sockets import sio_app
+from utilities.config_variables import FASTAPI_HOST, FASTAPI_PORT_NUMBER
 
 app = FastAPI()
 app.mount('/', app=sio_app)
@@ -13,12 +14,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+    
+if __name__ == "__main__":
+    import uvicorn
 
-
-@app.get('/')
-async def home():
-    return {'message': 'Hello👋 Developers💻'}
-
-
-if __name__ == '__main__':
-    uvicorn.run('main:app', reload=True)
+    uvicorn.run(app, reload=True,  host=FASTAPI_HOST, port=FASTAPI_PORT_NUMBER)
