@@ -22,5 +22,5 @@ class Player(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, index=True)
     score = Column(Integer, default=0)
-    group_id = Column(Integer, ForeignKey('groups.id'))
+    group_id = Column(Integer, ForeignKey('groups.id'), nullable=True)
     group = relationship("Group", back_populates="players")
