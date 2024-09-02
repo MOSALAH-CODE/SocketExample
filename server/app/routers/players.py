@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from database import get_db
 from services.playerService import PlayerService
-from schemas import Player, PlayerCreate, PlayerUpdate
+from schemas import Player, PlayerCreate, PlayerUpdate, PlayerIds
 from exceptions import PlayerNotFoundException
 
 router = APIRouter(
@@ -37,16 +37,16 @@ def delete_existing_player(player_id: int, service: PlayerService = Depends(get_
     except PlayerNotFoundException:
         raise HTTPException(status_code=404, detail="Player not found")
 
-@router.post('/{player_id}/add_to_group/{group_id}/', response_model=Player)
-def add_player_to_group(player_id: int, group_id: int, service: PlayerService = Depends(get_player_service)):
+@router.post('/add_to_group/{group_id}/', response_model=bool)
+def add_players_to_group(group_id: int, players: PlayerIds, service: PlayerService = Depends(get_player_service)):
     try:
-        return service.add_player_to_group(player_id, group_id)
+        return service.add_players_to_group(players.ids, group_id)
     except PlayerNotFoundException:
         raise HTTPException(status_code=404, detail="Player not found")
     except HTTPException as e:
         raise e
 
-@router.post('/{player_id}/remove_from_group/', response_model=Player)
+@router.post('/{player_id}/remove_from_group/', response_model=list[Player])
 def remove_player_from_group(player_id: int, service: PlayerService = Depends(get_player_service)):
     try:
         return service.remove_player_from_group(player_id)

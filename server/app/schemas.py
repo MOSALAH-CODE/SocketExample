@@ -15,6 +15,9 @@ class PlayerCreate(PlayerBase):
 class PlayerUpdate(PlayerBase):
     pass
 
+class PlayerIds(BaseModel):
+    ids: list[int]
+
 class Player(PlayerBase):
     id: int
     group_id: Optional[int] = None

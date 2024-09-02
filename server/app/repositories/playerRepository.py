@@ -37,13 +37,21 @@ class PlayerRepository:
             self.db.commit()
         return db_player
     
-    def add_player_to_group(self, player_id: int, group_id: int):
-        player = self.get_by_id(player_id)
-        if player:
+    def add_players_to_group(self, player_ids: list[int], group_id: int):
+        players = self.db.query(Player).filter(Player.id.in_(player_ids)).all()
+        
+        if not players:
+            return None
+
+        for player in players:
             player.group_id = group_id
-            self.db.commit()
+
+        self.db.commit()
+        for player in players:
             self.db.refresh(player)
-        return player
+        
+        return players
+
 
     def remove_player_from_group(self, player_id: int):
         player = self.get_by_id(player_id)

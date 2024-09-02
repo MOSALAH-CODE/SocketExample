@@ -38,14 +38,14 @@ class PlayerService:
             raise PlayerNotFoundException()
         return player
 
-    def add_player_to_group(self, player_id: int, group_id: int):
+    def add_players_to_group(self, players: list[int], group_id: int):
         # Check if group exists and is not full
         if self.group_repository.is_group_full(group_id, max_players=10):
             raise HTTPException(status_code=400, detail="Group is full")
-        player = self.player_repository.add_player_to_group(player_id, group_id)
-        if not player:
+        players = self.player_repository.add_players_to_group(players, group_id)
+        if not players:
             raise PlayerNotFoundException()
-        return player
+        return True
 
     def remove_player_from_group(self, player_id: int):
         player = self.player_repository.remove_player_from_group(player_id)
