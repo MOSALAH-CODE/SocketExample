@@ -1,21 +1,6 @@
 import socketio
-from models import Level, Group, Player
-from database import get_db
-from redis_db import (
-    sync_all_groups,
-    sync_all_waiting_rooms,
-    create_group,
-    add_player_to_group,
-    remove_player_from_group,
-    get_players_in_group,
-    is_group_full,
-    create_waiting_room,
-    add_player_to_waiting_room,
-    remove_player_from_waiting_room,
-    get_players_in_waiting_room,
-    is_waiting_room_empty
-)
-from redis_db import redisClient
+
+# from redis_db import redisClient
 
 sio_server = socketio.AsyncServer(
     async_mode='asgi',

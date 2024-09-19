@@ -21,3 +21,10 @@ REDIS_TTL = int(
     os.getenv("REDIS_TTL", default=900))
 REDIS_CONNECT_TIMEOUT = int(
     os.getenv("REDIS_CONNECT_TIMEOUT", default=10))
+
+# AWS DynamoDB
+AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
+AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
+AWS_REGION = os.getenv("AWS_REGION")
+
+MAX_PLAYERS_PER_GROUP = os.getenv("MAX_PLAYERS_PER_GROUP", default=5)

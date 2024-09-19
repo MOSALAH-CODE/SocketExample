@@ -1,18 +1,14 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from database import engine
-from models import Base
 from sockets import sio_app
 from utilities.config_variables import FASTAPI_HOST, FASTAPI_PORT_NUMBER
-from routers import players, groups, levels
-
-Base.metadata.create_all(bind=engine)
+from routers import leaderboard
 
 app = FastAPI()
 
-app.include_router(levels.router)
-app.include_router(groups.router)
-app.include_router(players.router)
+app.include_router(leaderboard.router)
+
 
 app.mount('/', app=sio_app)
 
