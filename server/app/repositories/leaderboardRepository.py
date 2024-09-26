@@ -2,7 +2,6 @@ from botocore.exceptions import ClientError
 from dynamoDB import get_table
 from boto3.dynamodb.conditions import Key
 from utilities.utils import convert_decimals, sort_users_by_honey
-from models import User
 
 class LeaderboardRepository():
     def __init__(self, table_name):
@@ -27,16 +26,6 @@ class LeaderboardRepository():
             return sort_users_by_honey(convert_decimals(response['Items']))
         except ClientError as e:
             return None
-
-    def get_all_users_by_level(self, level_id: int):
-        try:
-            response = self.table.scan(
-                FilterExpression=Key('level_id').eq(level_id)
-            )
-            return convert_decimals(response['Items'])
-        except ClientError as e:
-            return None
-
 
     def get_user(self, user_id: int):
         try:
