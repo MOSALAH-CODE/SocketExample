@@ -17,7 +17,7 @@ class ILeaderboardRepository(ABC):
         pass
 
     @abstractmethod
-    def add_user_honey_points(self, level_id: int):
+    def update_user_honey_points(self, level_id: int):
         """ Update the user's score and possibly move them to another group """
         pass
 

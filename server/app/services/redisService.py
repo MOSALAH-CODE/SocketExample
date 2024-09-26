@@ -41,7 +41,6 @@ class RedisService(IRedisService):
         
         return new_group_id
 
-
     def save_group_to_cache(self, level_id: int, group_id: int):
         group_key = f"level:{level_id}:groups"
         groups_json = self.redisClient.get(group_key)
@@ -167,3 +166,15 @@ class RedisService(IRedisService):
             return user
         
         return None
+    
+    def get_all_level_group_ids(self, level_id):
+        # Try to get groups from Redis
+        cache_key = f"level:{level_id}:groups"
+        groups_json = self.redisClient.get(cache_key)
+        
+        if groups_json:
+            groups = json.loads(groups_json)
+            return groups
+        
+        # If not in cache, fetch from DynamoDB and cache the result
+        # groups = self.leaderboard_repository.get_all_level_groups(level_id)

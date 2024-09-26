@@ -28,3 +28,12 @@ AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
 AWS_REGION = os.getenv("AWS_REGION")
 
 MAX_PLAYERS_PER_GROUP = os.getenv("MAX_PLAYERS_PER_GROUP", default=5)
+
+# Auth Config
+SECRET_KEY = os.getenv("SECRET_KEY", default='SECRET_kEY')
+ALGORITHM = os.getenv("ALGORITHM", default="hs12")
+
+# ALLOWED ORIGINS
+ALLOWED_ORIGINS = os.getenv(
+    "ALLOWED_ORIGINS", default="https://YTSAF.com")
+

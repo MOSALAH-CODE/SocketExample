@@ -1,11 +1,15 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from middleware import standard_response
 from fastapi.middleware.cors import CORSMiddleware
-from database import engine
 from sockets import sio_app
 from utilities.config_variables import FASTAPI_HOST, FASTAPI_PORT_NUMBER
 from routers import leaderboard
 
 app = FastAPI()
+
+@app.middleware("http")
+async def custom_middleware(request: Request, call_next):
+    return await standard_response(request, call_next)
 
 app.include_router(leaderboard.router)
 

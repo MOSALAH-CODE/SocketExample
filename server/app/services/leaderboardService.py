@@ -15,7 +15,7 @@ class LeaderboardService:
         
         return self.repository.add_user_to_group(user_id, honey_points)
     
-    def get_user_info(self, user_id: int):
+    def get_user_leaderboard(self, user_id: int):
         user = self.redis_service.get_user(user_id)
         
         if not user:
@@ -29,13 +29,13 @@ class LeaderboardService:
         
         return user
     
-    def add_user_honey_points(self, user_id: int, new_honey_points: int):
+    def update_user_honey_points(self, user_id: int, new_honey_points: int, add=False):
         user = self.redis_service.get_user(user_id)
-        
+                
         if not user:
             return False
         
-        return self.repository.add_user_honey_points(user_id, new_honey_points)
+        return self.repository.update_user_honey_points(user, new_honey_points, add)
 
     def remove_user(self, user_id: int):
         user = self.redis_service.get_user(user_id)

@@ -29,7 +29,7 @@ class LeaderboardRepository(ILeaderboardRepository):
         try:
             self.table.put_item(Item=user_data)
             self.redis_service.save_user(user_data)
-            return True
+            return user_data
         except ClientError as e:
             return False
 
@@ -76,11 +76,10 @@ class LeaderboardRepository(ILeaderboardRepository):
         except ClientError as e:
             return None
     
-    def add_user_honey_points(self, user_id: int, new_honey_points: int):
+    def update_user_honey_points(self, user: dict, new_honey_points: int, add=False):
         try:
-            user = self.redis_service.get_user(user_id)
             
-            honey_points = user['honey'] + new_honey_points
+            honey_points = user['honey'] + new_honey_points if add else new_honey_points
             level_id = self.get_level_for_user(honey_points)
             group_id = user['group_id']
             
@@ -88,7 +87,7 @@ class LeaderboardRepository(ILeaderboardRepository):
                 group_id = self.redis_service.get_available_group_for_level(level_id)
             
             user_data = {
-                'user_id': user_id,
+                'user_id': user['user_id'],
                 'group_id': group_id,
                 'honey': honey_points,
                 'level_id': level_id,
