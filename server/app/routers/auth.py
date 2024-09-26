@@ -1,60 +1,55 @@
 from http.client import HTTPException
 import jwt
-from fastapi import Depends, HTTPException, status, Header
-from sqlalchemy import text
-from sqlalchemy.orm import Session
-from redis_db import get_user_from_redis, save_user_to_redis
-from database import get_db
-from models import User
+from typing import Optional
+from fastapi import HTTPException, status, Header
 from utilities.config_variables import SECRET_KEY, ALGORITHM
+from services.redisService import RedisService
+from models import User
+from repositories.leaderboardRepository import LeaderboardRepository
+
+leaderboard_repository = LeaderboardRepository("leaderboard")
+redis_service = RedisService()
+
+async def check_correct_token_request(authorization: str) -> Optional[str]:
+    if authorization and authorization.startswith("Token "):
+        return authorization[len("Token "):].strip()
+    # Raise an HTTPException if the token format is incorrect or missing
+    raise HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED
+    )
 
 
-async def find_token_in_DB(db, token):
+async def get_current_user(authorization: Optional[str] = Header(None)):
+    # Create a generic 401 Unauthorized exception
+    unauthorized_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED
+    )
 
-    query = text(
-        """SELECT tokens.id AS tokenId, 
-                tokens.user_id AS userId,
-                IFNULL(user_meta.`value`->>'$.honeyPoints', 0) as honey
-            FROM user_tokens AS tokens
-                JOIN users ON users.id = tokens.user_id 
-                LEFT JOIN user_meta ON user_meta.user_id = tokens.user_id AND user_meta.`key` = 5  
-            WHERE access_token = :token
-                AND tokens.is_deleted = 0
-                AND users.is_deleted = 0;""")
-    user = db.execute(query, {"token": token}).first()
-    if user:
-        user = User.from_query_result(user)
-        return user
-    else:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED)
+    # Check and decode the token
+    token_value = await check_correct_token_request(authorization)
+    
+    try:
+        jwt.decode(token_value, SECRET_KEY, algorithms=[ALGORITHM])
+    except jwt.PyJWTError:
+        raise unauthorized_exception
 
+    # Retrieve the user from Redis
+    user_from_redis = redis_service.get_user_by_token(token_value)
+    if not user_from_redis:
+        raise unauthorized_exception
 
-async def check_correct_token_request(authorization):
-    if authorization:
-        if authorization.startswith("Token"):
-            try:
-                return authorization[len("Token"):].strip()
-            except:
-                raise HTTPException(
-                    status_code=status.HTTP_401_UNAUTHORIZED)
-
-    else:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED)
-
-
-async def get_current_user(authorization: str = Header(None), db: Session = Depends(get_db)):
-    tokenValue = await check_correct_token_request(authorization)
-    if tokenValue:
-        jwt.decode(tokenValue, SECRET_KEY, algorithms=[ALGORITHM])
-        userFromRedis = await get_user_from_redis(tokenValue)
-        if (userFromRedis):
-            return userFromRedis
-        else:
-            userFromDb = await find_token_in_DB(db, tokenValue)
-            await save_user_to_redis(tokenValue, userFromDb)
-            return userFromDb
-    else:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED)
+    user_from_dynamo = leaderboard_repository.get_user(user_from_redis['id'])
+    
+    honey = 0
+    if 'honey' in user_from_redis:
+        honey = user_from_redis.get('honey')
+        if 'honey' in user_from_dynamo and user_from_dynamo.get('honey') != honey:
+            leaderboard_repository.update_user_honey_points(user_from_dynamo, honey)
+    
+    # Return the authenticated user
+    return User(
+        user_id=user_from_redis.get('id'),
+        honey=honey,
+        level_id=user_from_dynamo.get('level_id') if user_from_dynamo else -1,
+        group_id=user_from_dynamo.get('group_id') if user_from_dynamo else -1,
+    )

@@ -1,51 +1,57 @@
 from repositories.leaderboardRepository import LeaderboardRepository
-from services.redisService import RedisService
 from utilities.utils import find_user_rank
+from datetime import datetime
+from models import User
+from utilities.config_variables import MAX_PLAYERS_PER_GROUP
+from enums.levelsEnum import Levels
 
 class LeaderboardService:
     def __init__(self):
         self.repository = LeaderboardRepository("leaderboard")
-        self.redis_service = RedisService(self.repository)
 
     def add_user(self, user_id: int, honey_points: int):
-        user = self.redis_service.get_user(user_id)
+        level_id = self.get_level_for_user(honey_points)
+        group_id = self.repository.get_greatest_group_id_for_level(level_id)
         
-        if user:
-            return False
+        users = self.repository.get_users_in_group(level_id, group_id)
+        if (users and len(users) >= MAX_PLAYERS_PER_GROUP) or group_id == 0:
+            group_id = group_id + 1
         
-        return self.repository.add_user_to_group(user_id, honey_points)
-    
-    def get_user_leaderboard(self, user_id: int):
-        user = self.redis_service.get_user(user_id)
-        
-        if not user:
-            return None
-        
-        group_users = self.redis_service.get_users_in_group(user['level_id'], user['group_id'])
-        user['rank'] = -1
-        
-        if group_users:
-            user['rank'] = find_user_rank(group_users, user_id)
-        
-        return user
-    
-    def update_user_honey_points(self, user_id: int, new_honey_points: int, add=False):
-        user = self.redis_service.get_user(user_id)
-                
-        if not user:
-            return False
-        
-        return self.repository.update_user_honey_points(user, new_honey_points, add)
+        user_data = {
+            'user_id': user_id,
+            'group_id': group_id,
+            'honey': honey_points,
+            'level_id': level_id,
+            'updated_at': str(datetime.now())
+        }
+        return self.repository.insert_user(user_data)
 
-    def remove_user(self, user_id: int):
-        user = self.redis_service.get_user(user_id)
+    def get_user_leaderboard(self, user: User):
+        info = {
+            'user_id': user.user_id,
+            'level_id': user.level_id,
+            'group_id': user.group_id,
+            'honey': user.honey,
+            'users': [],
+            'rank': 0
+        }
         
-        if not user:
-            return False
+        if user.group_id == -1:
+            info = self.add_user(user.user_id, user.honey)
+
+        users = self.repository.get_users_in_group(info['level_id'], info['group_id'])
         
-        return self.repository.remove_user_from_group(user)
+        info['users'] = users
+        info['rank'] = find_user_rank(users, user.user_id)
+        
+        return info
 
-
-    def get_users_in_group(self, level_id: int, group_id: int):
-        users = self.redis_service.get_users_in_group(level_id, group_id)
-        return users
+    def get_level_for_user(self, honey_points: int):
+        if honey_points < 100:
+            return Levels.BRONZE.value
+        elif honey_points < 200:
+            return Levels.SILVER.value
+        elif honey_points < 300:
+            return Levels.GOLD.value
+        else:
+            return Levels.PLATINUM.value

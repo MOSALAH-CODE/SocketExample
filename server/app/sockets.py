@@ -1,9 +1,7 @@
-from repositories.leaderboardRepository import LeaderboardRepository
-from services.redisService import RedisService
+from services.leaderboardService import LeaderboardService
 import socketio
 
-repository = LeaderboardRepository("leaderboard")
-redis_service = RedisService(repository)
+leaderboard_service = LeaderboardService()
 
 sio_server = socketio.AsyncServer(
     async_mode='asgi',

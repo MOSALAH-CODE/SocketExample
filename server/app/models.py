@@ -34,15 +34,7 @@ class BatchData(BaseModel):
 
 
 class User(BaseModel):
-    token_id: int
     user_id: int
     honey: Optional[int]
-
-    @classmethod
-    def from_query_result(cls, queryResult):
-        return cls(
-            token_id=queryResult.tokenId,
-            user_id=queryResult.userId,
-            honey=queryResult.honey
-        )
-
+    level_id: Optional[int]
+    group_id: Optional[int]
